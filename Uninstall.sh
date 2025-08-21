@@ -1,9 +1,14 @@
 #!/bin/bash
 
+
+# Color codes
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 set -euo pipefail
 IFS=$'\n\t'
 
-command -v apt-get >/dev/null 2>&1 || { echo "Error: apt-get not found (unsupported distribution)." >&2; exit 1; }
+command -v apt-get >/dev/null 2>&1 || { echo -e "${RED}Error: apt-get not found (unsupported distribution).${NC}" >&2; exit 1; }
 
 show_help() {
   sed -n '1,/^############################################################$/p' "$0" | sed 's/^# \{0,1\}//'
@@ -11,7 +16,7 @@ show_help() {
   echo "Current default package count: ${#applications[@]:-0}"
 }
 
-# Default list of applications to uninstall
+# List of applications to uninstall
 applications=(
   "thunderbird"
   "thunderbird-gnome-support"
@@ -56,19 +61,19 @@ while getopts ":ynh" opt; do
     y) assume_yes=true ;;
     n) dry_run=true ;;
     h) show_help; exit 0 ;;
-    :) echo "Option -$OPTARG requires an argument" >&2; exit 1 ;;
-    \?) echo "Unknown option: -$OPTARG" >&2; show_help; exit 1 ;;
+  :) echo -e "${RED}Option -$OPTARG requires an argument${NC}" >&2; exit 1 ;;
+  \?) echo -e "${RED}Unknown option: -$OPTARG${NC}" >&2; show_help; exit 1 ;;
   esac
 done
 shift $((OPTIND-1))
 
-# If user supplied extra packages, append them
+# Include extra supplied packages
 if [ $# -gt 0 ]; then
   applications+=("$@")
 fi
 
 if [ ${#applications[@]} -eq 0 ]; then
-  echo "No packages specified." >&2
+  echo -e "${RED}No packages specified.${NC}" >&2
   exit 0
 fi
 
@@ -80,7 +85,7 @@ if ! $assume_yes; then
   read -r -p "Proceed with uninstall? (y/N) " reply
   case "$reply" in
     [yY][eE][sS]|[yY]) ;;
-    *) echo "Aborted."; exit 0 ;;
+  *) echo -e "${RED}Aborted.${NC}"; exit 0 ;;
   esac
 fi
 
@@ -96,7 +101,7 @@ for app in "${applications[@]}"; do
         removed_any=true
         echo "  Removed: $app"
       else
-        echo "  Warning: Failed to remove $app" >&2
+        echo -e "${RED}  Warning: Failed to remove $app${NC}" >&2
       fi
     fi
   else
@@ -109,7 +114,7 @@ if $dry_run; then
 else
   if $removed_any; then
     echo "Running autoremove to clean dependencies..."
-    apt-get autoremove -y || echo "Warning: autoremove encountered an issue" >&2
+  apt-get autoremove -y || echo -e "${RED}Warning: autoremove encountered an issue${NC}" >&2
   fi
   echo "Done." 
 fi
