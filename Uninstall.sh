@@ -13,7 +13,7 @@ command -v apt-get >/dev/null 2>&1 || { echo -e "${RED}Error: apt-get not found 
 show_help() {
   sed -n '1,/^############################################################$/p' "$0" | sed 's/^# \{0,1\}//'
   echo
-  echo "Current default package count: ${#applications[@]:-0}"
+  echo -e "\033[0;32mCurrent default package count: ${#applications[@]:-0}${NC}"
 }
 
 # List of applications to uninstall
@@ -77,12 +77,13 @@ if [ ${#applications[@]} -eq 0 ]; then
   exit 0
 fi
 
-echo "Packages scheduled for removal (${#applications[@]}):"
+echo -e "\033[0;32mPackages scheduled for removal (${#applications[@]}):${NC}"
 printf '  - %s\n' "${applications[@]}"
 echo
 
 if ! $assume_yes; then
-  read -r -p "Proceed with uninstall? (y/N) " reply
+  echo -e "\033[0;33mProceed with uninstall? (y/N)\033[0m"
+  read -r -p "" reply
   case "$reply" in
     [yY][eE][sS]|[yY]) ;;
   *) echo -e "${RED}Aborted.${NC}"; exit 0 ;;
@@ -105,7 +106,7 @@ for app in "${applications[@]}"; do
       fi
     fi
   else
-    echo "  Not installed: $app"
+    echo -e "\033[0;33m  Not installed: $app${NC}"
   fi
 done
 
@@ -116,5 +117,5 @@ else
     echo "Running autoremove to clean dependencies..."
   apt-get autoremove -y || echo -e "${RED}Warning: autoremove encountered an issue${NC}" >&2
   fi
-  echo "Done." 
+  echo -e "\033[0;32mDone.${NC}"
 fi
